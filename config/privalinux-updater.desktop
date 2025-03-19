@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=PrivaLinux System Updater
+Comment=Check and install system updates securely
+Exec=pkexec /usr/local/bin/system_updater.sh
+Icon=system-software-update
+Categories=System;Settings;
+Keywords=Update;Upgrade;System;
+StartupNotify=true
+Terminal=false
