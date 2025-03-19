@@ -159,13 +159,27 @@ fi
 echo "20"; echo "# Copying system files (this may take a while)..."
 rsync -av /run/live/medium/casper/filesystem.squashfs/* /mnt/
 
-# Install bootloader
-echo "60"; echo "# Installing bootloader..."
+# Setup EFI directory structure and install bootloader
+echo "60"; echo "# Setting up EFI and installing bootloader..."
+
+# Create necessary EFI directories
+mkdir -p /mnt/boot/efi/EFI/BOOT
+mkdir -p /mnt/boot/efi/EFI/privalinux
+
+# Mount virtual filesystems for chroot
 for dir in /dev /dev/pts /proc /sys /run; do
     mount -B $dir /mnt$dir
 done
-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi
+
+# Install GRUB with UEFI support
+chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=privalinux --recheck
+chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable --recheck
+
+# Update GRUB configuration
 chroot /mnt update-grub
+
+# Copy GRUB EFI file as fallback bootloader
+cp /mnt/boot/efi/EFI/privalinux/grubx64.efi /mnt/boot/efi/EFI/BOOT/BOOTX64.EFI
 
 # Configure Cinnamon desktop
 echo "80"; echo "# Configuring desktop environment..."
