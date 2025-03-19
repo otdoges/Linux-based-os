@@ -189,6 +189,41 @@ umount /mnt
 echo "100"; echo "# Installation complete!"
 ) | show_dialog --progress --title="Installing PrivaLinux OS" --text="Installing system..." --percentage=0 --auto-close --width=500
 
+# Load customization settings
+source /tmp/customization.conf
+
+# Browser selection
+BROWSER_LIST=""
+while IFS='|' read -r name package description; do
+    BROWSER_LIST+="$package|$name - $description\n"
+done <<< "$(echo "$DEFAULT_BROWSERS" | tr -d '[]')"
+
+SELECTED_BROWSER=$(show_dialog --list --title="Browser Selection" \
+    --text="Choose your default web browser:" \
+    --column="Package" --column="Description" --separator="|" --width=600 --height=400 \
+    $(echo -e "$BROWSER_LIST") | cut -d'|' -f1)
+
+# VPN selection
+VPN_LIST=""
+while IFS='|' read -r name package description; do
+    VPN_LIST+="$package|$name - $description\n"
+done <<< "$(echo "$DEFAULT_VPNS" | tr -d '[]')"
+
+SELECTED_VPN=$(show_dialog --list --title="VPN Selection" \
+    --text="Choose your preferred VPN service:" \
+    --column="Package" --column="Description" --separator="|" --width=600 --height=400 \
+    $(echo -e "$VPN_LIST") | cut -d'|' -f1)
+
+# Install selected packages
+chroot /mnt apt-get install -y "$SELECTED_BROWSER" "$SELECTED_VPN" qbittorrent
+
+# Configure DNS settings
+cat > /mnt/etc/systemd/resolved.conf << EOF
+[Resolve]
+DNS=$DNS_PROVIDER $BACKUP_DNS_PROVIDER
+DNSOverTLS=yes
+EOF
+
 # Show completion message
 show_dialog --info --title="Installation Complete" \
     --text="PrivaLinux OS has been successfully installed.\n\nYou can now reboot your system." \
