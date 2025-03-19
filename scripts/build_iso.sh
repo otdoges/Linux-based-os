@@ -62,10 +62,24 @@ chroot "$WORK_DIR/squashfs" /bin/bash -c "
     # Update package lists
     apt-get update
 
+    # Install GRUB and required packages
+    apt-get install -y grub-efi-amd64 grub-efi-amd64-signed shim-signed efibootmgr
+
     # Install packages from package list
     if [ -f /preseed/package_list.conf ]; then
         xargs apt-get install -y < /preseed/package_list.conf
     fi
+
+    # Configure GRUB
+    mkdir -p /boot/efi
+    mkdir -p /boot/grub
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=privalinux --recheck
+
+    # Configure GRUB settings
+    echo 'GRUB_TIMEOUT=5' >> /etc/default/grub
+    echo 'GRUB_DISTRIBUTOR=\"PrivaLinux\"' >> /etc/default/grub
+    echo 'GRUB_ENABLE_CRYPTODISK=y' >> /etc/default/grub
+    update-grub
 
     # Apply privacy settings
     if [ -f /preseed/privacy_settings.conf ]; then
