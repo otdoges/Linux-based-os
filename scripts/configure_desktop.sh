@@ -1,18 +1,37 @@
 #!/bin/bash
 
 # PrivaLinux OS Desktop Configuration Script
-# This script configures desktop environment, themes, and animations
+# This script configures desktop environment, themes, animations and AI integration
 
 set -e
 
 echo "[+] Configuring desktop environment for PrivaLinux OS"
 
+# Install required packages for enhanced desktop experience
+apt-get install -y gnome-tweaks dconf-editor cinnamon-menu-editor plank ollama
+
 # Create theme directory
 mkdir -p /usr/share/themes/PrivaLinux
 cp -r /etc/skel/.themes/PrivaLinux/* /usr/share/themes/PrivaLinux/
 
-# Install required packages
-apt-get install -y gnome-tweaks dconf-editor
+# Configure Ollama AI service
+systemctl enable --now ollama
+ollama pull mistral
+
+# Create AI assistant shortcut
+cat > /etc/skel/Desktop/ai-assistant.desktop << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=AI Assistant
+Comment=PrivaLinux AI Assistant powered by Ollama
+Exec=gnome-terminal -- bash -c "echo 'Welcome to PrivaLinux AI Assistant' && ollama run mistral"
+Icon=system-help
+Terminal=false
+Categories=Utility;AI;
+EOF
+
+chmod +x /etc/skel/Desktop/ai-assistant.desktop
 
 # Copy GTK theme
 mkdir -p /usr/share/themes/PrivaLinux/gtk-3.0
@@ -53,10 +72,28 @@ gsettings set org.cinnamon.desktop.wm.preferences resize-with-right-button true
 gsettings set org.cinnamon.desktop.interface gtk-theme-backup 'PrivaLinux-Dark'
 gsettings set org.cinnamon.theme name 'PrivaLinux-Dark'
 
-# Configure panel and applets
+# Configure panel and applets for Windows-like experience
 gsettings set org.cinnamon panels-enabled "['1:0:bottom']"
 gsettings set org.cinnamon panel-zone-icon-sizes '[{"panelId":1,"left":0,"center":0,"right":24}]'
-gsettings set org.cinnamon enabled-applets "['panel1:left:0:menu@cinnamon.org', 'panel1:left:1:show-desktop@cinnamon.org', 'panel1:left:2:grouped-window-list@cinnamon.org', 'panel1:right:0:systray@cinnamon.org', 'panel1:right:1:notifications@cinnamon.org', 'panel1:right:2:printers@cinnamon.org', 'panel1:right:3:removable-drives@cinnamon.org', 'panel1:right:4:network@cinnamon.org', 'panel1:right:5:sound@cinnamon.org', 'panel1:right:6:calendar@cinnamon.org']"
+gsettings set org.cinnamon enabled-applets "['panel1:left:0:menu@cinnamon.org', 'panel1:left:1:show-desktop@cinnamon.org', 'panel1:left:2:grouped-window-list@cinnamon.org', 'panel1:right:0:systray@cinnamon.org', 'panel1:right:1:notifications@cinnamon.org', 'panel1:right:2:printers@cinnamon.org', 'panel1:right:3:removable-drives@cinnamon.org', 'panel1:right:4:network@cinnamon.org', 'panel1:right:5:sound@cinnamon.org', 'panel1:right:6:calendar@cinnamon.org', 'panel1:right:7:weather@cinnamon.org']"
+
+# Configure Plank dock for enhanced taskbar experience
+cat > /etc/skel/.config/plank/dock1/launchers/firefox.dockitem << EOF
+[PlankDockItemPreferences]
+Launcher=file:///usr/share/applications/firefox.desktop
+EOF
+
+cat > /etc/skel/.config/plank/dock1/launchers/ai-assistant.dockitem << EOF
+[PlankDockItemPreferences]
+Launcher=file:///etc/skel/Desktop/ai-assistant.desktop
+EOF
+
+# Configure Plank settings
+dconf write /net/launchpad/plank/docks/dock1/theme '"Transparent"'
+dconf write /net/launchpad/plank/docks/dock1/zoom-enabled true
+dconf write /net/launchpad/plank/docks/dock1/icon-size 48
+dconf write /net/launchpad/plank/docks/dock1/position '"bottom"'
+dconf write /net/launchpad/plank/docks/dock1/alignment '"center"'
 
 # Configure window management
 gsettings set org.cinnamon.muffin edge-tile-threshold 150
