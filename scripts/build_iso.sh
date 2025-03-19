@@ -22,37 +22,91 @@ mkdir -p "$OUTPUT_DIR"
 
 echo "[+] Starting PrivaLinux OS build process"
 
-# Step 1: Download base ISO
-echo "[+] Downloading base distribution ISO"
-if [ "$BASE_DISTRO" == "ubuntu" ]; then
-    wget -c "https://releases.ubuntu.com/$BASE_VERSION/ubuntu-$BASE_VERSION-desktop-amd64.iso" -O "$WORK_DIR/base.iso"
-elif [ "$BASE_DISTRO" == "linuxmint" ]; then
-    # Replace with actual Linux Mint download URL
-    wget -c "https://mirrors.edge.kernel.org/linuxmint/stable/21/linuxmint-21-cinnamon-64bit.iso" -O "$WORK_DIR/base.iso"
-else
-    echo "[!] Unsupported base distribution"
-    exit 1
-fi
-
-# Step 2: Extract ISO contents
+# Step 1: Extract ISO contents
 echo "[+] Extracting ISO contents"
 mkdir -p "$WORK_DIR/iso_extract"
 mkdir -p "$WORK_DIR/iso_mount"
+mkdir -p "$WORK_DIR/squashfs"
 
 # Mount the ISO
+echo "[+] Mounting ISO"
 mount -o loop "$WORK_DIR/base.iso" "$WORK_DIR/iso_mount"
 
 # Copy contents to working directory
+echo "[+] Copying ISO contents"
 rsync -a "$WORK_DIR/iso_mount/" "$WORK_DIR/iso_extract/"
+
+# Extract the squashfs filesystem
+echo "[+] Extracting live filesystem"
+unsquashfs -d "$WORK_DIR/squashfs" "$WORK_DIR/iso_mount/casper/filesystem.squashfs"
 
 # Unmount ISO
 umount "$WORK_DIR/iso_mount"
 
-# Step 3: Customize the distribution
+# Step 2: Customize the distribution
 echo "[+] Customizing distribution"
 
-# Create chroot environment
-mkdir -p "$WORK_DIR/chroot"
+# Mount virtual filesystems for chroot
+echo "[+] Preparing chroot environment"
+mount --bind /dev "$WORK_DIR/squashfs/dev"
+mount --bind /dev/pts "$WORK_DIR/squashfs/dev/pts"
+mount --bind /proc "$WORK_DIR/squashfs/proc"
+mount --bind /sys "$WORK_DIR/squashfs/sys"
+
+# Copy resolv.conf for network access in chroot
+cp /etc/resolv.conf "$WORK_DIR/squashfs/etc/"
+
+# Install additional packages and apply customizations in chroot
+echo "[+] Installing packages and applying customizations"
+chroot "$WORK_DIR/squashfs" /bin/bash -c "
+    # Update package lists
+    apt-get update
+
+    # Install packages from package list
+    if [ -f /preseed/package_list.conf ]; then
+        xargs apt-get install -y < /preseed/package_list.conf
+    fi
+
+    # Apply privacy settings
+    if [ -f /preseed/privacy_settings.conf ]; then
+        source /preseed/privacy_settings.conf
+    fi
+
+    # Apply performance settings
+    if [ -f /preseed/performance_settings.conf ]; then
+        source /preseed/performance_settings.conf
+    fi
+
+    # Clean up
+    apt-get clean
+    rm -rf /tmp/* ~/.bash_history
+    rm /etc/resolv.conf
+"
+
+# Unmount virtual filesystems
+umount "$WORK_DIR/squashfs/sys"
+umount "$WORK_DIR/squashfs/proc"
+umount "$WORK_DIR/squashfs/dev/pts"
+umount "$WORK_DIR/squashfs/dev"
+
+# Step 3: Create new squashfs
+echo "[+] Creating new squashfs filesystem"
+mksquashfs "$WORK_DIR/squashfs" "$WORK_DIR/iso_extract/casper/filesystem.squashfs" -comp xz -b 1M
+
+# Step 4: Update ISO metadata
+echo "[+] Updating ISO metadata"
+cd "$WORK_DIR/iso_extract"
+find . -type f -print0 | xargs -0 md5sum > md5sum.txt
+
+# Step 5: Generate new ISO
+echo "[+] Generating final ISO"
+mkisofs -o "$OUTPUT_DIR/$OUTPUT_NAME-$OUTPUT_VERSION.iso" \
+    -b isolinux/isolinux.bin -c isolinux/boot.cat \
+    -no-emul-boot -boot-load-size 4 -boot-info-table \
+    -V "$OUTPUT_NAME $OUTPUT_VERSION" -cache-inodes -r -J -l \
+    "$WORK_DIR/iso_extract"
+
+echo "[+] Build completed successfully"
 
 # Extract squashfs filesystem with parallel processing
 unsquashfs -processors $(nproc) -d "$WORK_DIR/chroot" "$WORK_DIR/iso_extract/casper/filesystem.squashfs"
