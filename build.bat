@@ -53,8 +53,33 @@ set "WIN_PATH=%~dp0"
 set "WSL_PATH=/mnt/%WIN_PATH::=%"
 set "WSL_PATH=!WSL_PATH:\=/!"
 
-wsl -d Ubuntu -e bash -c "cd '%WSL_PATH%' && chmod +x scripts/build_iso.sh && sudo ./scripts/build_iso.sh"
+:: Create necessary directories in WSL
+wsl -d Ubuntu -e bash -c "cd '%WSL_PATH%' && mkdir -p build/iso_extract build/iso_mount build/chroot output"
+
+:: Download and extract base ISO
+echo Downloading and extracting base ISO...
+wsl -d Ubuntu -e bash -c "cd '%WSL_PATH%' && \
+    if [ ! -f build/base.iso ]; then \
+        wget -c https://mirrors.edge.kernel.org/linuxmint/stable/21/linuxmint-21-cinnamon-64bit.iso -O build/base.iso; \
+    fi && \
+    sudo mount -o loop build/base.iso build/iso_mount && \
+    sudo rsync -a build/iso_mount/ build/iso_extract/ && \
+    sudo umount build/iso_mount"
+
+:: Apply customizations
+echo Applying PrivaLinux customizations...
+wsl -d Ubuntu -e bash -c "cd '%WSL_PATH%' && \
+    sudo cp -r config/* build/iso_extract/preseed/ && \
+    sudo cp -r branding/* build/iso_extract/isolinux/ && \
+    sudo cp -r packages/package_list.conf build/iso_extract/preseed/"
+
+:: Generate new ISO
+echo Generating final ISO...
+wsl -d Ubuntu -e bash -c "cd '%WSL_PATH%' && \
+    sudo genisoimage -o output/privalinux-1.0.iso -b isolinux/isolinux.bin \
+    -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table \
+    -V 'PrivaLinux 1.0' -cache-inodes -r -J -l build/iso_extract"
 
 echo Build process completed!
-echo Check the output directory for the ISO file
+echo The ISO file has been created in the output directory
 pause
