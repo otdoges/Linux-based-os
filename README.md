@@ -30,6 +30,8 @@ PrivaLinux is a privacy-focused Linux distribution based on Ubuntu/Linux Mint wi
 ## Building PrivaLinux OS
 
 ### Prerequisites
+
+#### For Linux
 - Linux system (Ubuntu/Linux Mint recommended)
 - Required packages:
   ```bash
@@ -41,28 +43,46 @@ PrivaLinux is a privacy-focused Linux distribution based on Ubuntu/Linux Mint wi
       rsync \
       wget \
       zenity
- ```
+  ```
+
+#### For Windows
+- Windows 10/11 with WSL (Windows Subsystem for Linux) enabled
+- Ubuntu installed in WSL
+- PowerShell 5.1 or later
 ```
 
 ### Build Steps
+
+#### For Linux
 1. Clone the repository:
-   
    ```bash
-   git clone https://github.com/yourusername/privalinux.git
+   git clone https://github.com/otdoges/Linux-based-os.git
    cd privalinux
-    ```
    ```
+
 2. Make the build script executable:
-   
    ```bash
    cd scripts
    chmod +x build_iso.sh
-    ```
+   ```
+
 3. Run the build script:
-   
    ```bash
    sudo ./build_iso.sh
-    ```
+   ```
+
+#### For Windows
+1. Clone the repository:
+   ```powershell
+   git clone https://github.com/otdoges/Linux-based-os.git
+   cd privalinux
+   ```
+
+2. Run the PowerShell build script:
+   ```powershell
+   cd scripts
+   .\build_iso.ps1
+   ```
 The build process will:
 
 - Download the base Linux Mint ISO
