@@ -54,8 +54,8 @@ echo "[+] Customizing distribution"
 # Create chroot environment
 mkdir -p "$WORK_DIR/chroot"
 
-# Extract squashfs filesystem
-unsquashfs -d "$WORK_DIR/chroot" "$WORK_DIR/iso_extract/casper/filesystem.squashfs"
+# Extract squashfs filesystem with parallel processing
+unsquashfs -processors $(nproc) -d "$WORK_DIR/chroot" "$WORK_DIR/iso_extract/casper/filesystem.squashfs"
 
 # Prepare chroot environment
 mount --bind /dev "$WORK_DIR/chroot/dev"
@@ -67,13 +67,23 @@ mount --bind /sys "$WORK_DIR/chroot/sys"
 cp "$PACKAGES_DIR/package_list.conf" "$WORK_DIR/chroot/tmp/"
 cp "$CONFIG_DIR/privacy_settings.conf" "$WORK_DIR/chroot/tmp/"
 
+# Ask for installation type
+INSTALL_TYPE=$(show_dialog --list --title="Installation Type" \
+    --text="Choose your installation type:" \
+    --column="Type" --column="Description" \
+    "minimal" "Basic system with essential packages only" \
+    "full" "Complete system with all packages" | tr -d '\n')
+
 # Install packages and apply configurations inside chroot
 chroot "$WORK_DIR/chroot" /bin/bash -c "
     # Update package lists
     apt-get update
     
-    # Install packages from package list
-    grep -v '^#' /tmp/package_list.conf | xargs apt-get install -y
+    # Install packages based on selection
+    if [ \"$INSTALL_TYPE\" = \"minimal\" ]; then
+        grep -v '^#' /tmp/package_list.conf | grep '^base-system\|^systemd\|^network-manager\|^cinnamon\|^lightdm' | xargs apt-get install -y
+    else
+        grep -v '^#' /tmp/package_list.conf | xargs apt-get install -y
     
     # Apply privacy configurations
     # This would be implemented with actual configuration commands
@@ -96,9 +106,18 @@ umount "$WORK_DIR/chroot/sys"
 echo "[+] Applying PrivaLinux branding"
 cp -r "$BRANDING_DIR/"* "$WORK_DIR/iso_extract/"
 
-# Step 5: Rebuild squashfs filesystem
-echo "[+] Rebuilding filesystem"
-mksquashfs "$WORK_DIR/chroot" "$WORK_DIR/iso_extract/casper/filesystem.squashfs" -comp xz
+# Step 5: Rebuild squashfs filesystem with optimized compression
+echo "[+] Rebuilding filesystem with optimized compression"
+mksquashfs "$WORK_DIR/chroot" "$WORK_DIR/iso_extract/casper/filesystem.squashfs" \
+    -comp zstd -Xcompression-level 19 \
+    -processors $(nproc) \
+    -wildcards \
+    -e "usr/share/doc/*" \
+    -e "usr/share/man/*" \
+    -e "usr/share/help/*" \
+    -e "usr/share/info/*" \
+    -e "var/cache/apt/*" \
+    -e "var/lib/apt/lists/*"
 
 # Step 6: Update ISO metadata
 echo "[+] Updating ISO metadata"
