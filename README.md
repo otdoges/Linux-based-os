@@ -1,3 +1,4 @@
+```markdown
 # PrivaLinux OS
 
 PrivaLinux is a privacy-focused Linux distribution based on Ubuntu/Linux Mint with enhanced security features and pre-installed applications for privacy protection.
@@ -26,14 +27,47 @@ PrivaLinux is a privacy-focused Linux distribution based on Ubuntu/Linux Mint wi
 5. **Custom Installer**: Develop a user-friendly installation process
 6. **Testing & Refinement**: Ensure stability and security
 
-## Getting Started
+## Building PrivaLinux OS
 
-This repository contains the build scripts and configuration files needed to create the PrivaLinux OS ISO. Follow the instructions in the documentation to build your own copy or contribute to the project.
+### Prerequisites
+- Linux system (Ubuntu/Linux Mint recommended)
+- Required packages:
+  ```bash
+  sudo apt-get update && sudo apt-get install -y \
+      squashfs-tools \
+      xorriso \
+      isolinux \
+      genisoimage \
+      rsync \
+      wget \
+      zenity
+ ```
+```
 
-## Contributing
+### Build Steps
+1. Clone the repository:
+   
+   ```bash
+   git clone https://github.com/yourusername/privalinux.git
+   cd privalinux
+    ```
+   ```
+2. Make the build script executable:
+   
+   ```bash
+   cd scripts
+   chmod +x build_iso.sh
+    ```
+3. Run the build script:
+   
+   ```bash
+   sudo ./build_iso.sh
+    ```
+The build process will:
 
-Contributions are welcome! Please see our contributing guidelines for more information on how to participate in the development of PrivaLinux OS.
-
-## License
-
-This project is licensed under the GPL v3 License - see the LICENSE file for details.
+- Download the base Linux Mint ISO
+- Extract and customize it
+- Install privacy-focused packages
+- Apply security configurations
+- Create the final ISO in the output directory
+Build time varies depending on your system and internet connection (typically 30-60 minutes).
