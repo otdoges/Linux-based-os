@@ -18,45 +18,50 @@ apt-get install -y gnome-tweaks dconf-editor
 mkdir -p /usr/share/themes/PrivaLinux/gtk-3.0
 cp /etc/skel/config/gtk-theme.css /usr/share/themes/PrivaLinux/gtk-3.0/gtk.css
 
-# Configure desktop animations
-gsettings set org.gnome.desktop.interface gtk-theme 'PrivaLinux'
-gsettings set org.gnome.desktop.wm.preferences theme 'PrivaLinux'
+# Configure Cinnamon desktop settings
+gsettings set org.cinnamon.theme name 'PrivaLinux'
+gsettings set org.cinnamon.desktop.interface gtk-theme 'PrivaLinux'
+gsettings set org.cinnamon.desktop.wm.preferences theme 'PrivaLinux'
 
-# Enable animations
-gsettings set org.gnome.desktop.interface enable-animations true
+# Enable animations and effects
+gsettings set org.cinnamon enable-vfade true
+gsettings set org.cinnamon enable-animations true
+gsettings set org.cinnamon startup-animation true
 
 # Configure window animations
-gsettings set org.gnome.mutter center-new-windows true
-gsettings set org.gnome.mutter attach-modal-dialogs true
+gsettings set org.cinnamon.muffin tile-maximize true
+gsettings set org.cinnamon.muffin edge-tiling true
+gsettings set org.cinnamon.muffin resize-threshold 24
 
-# Set workspace animation speed
-gsettings set org.gnome.mutter workspaces-only-on-primary true
-gsettings set org.gnome.shell.window-switcher current-workspace-only true
+# Set workspace behavior
+gsettings set org.cinnamon.desktop.wm.preferences num-workspaces 4
+gsettings set org.cinnamon workspace-expo-view-as-grid true
+gsettings set org.cinnamon.muffin workspace-cycle true
 
 # Configure desktop appearance
-gsettings set org.gnome.desktop.interface cursor-theme 'Adwaita'
-gsettings set org.gnome.desktop.interface icon-theme 'Mint-Y'
-gsettings set org.gnome.desktop.interface font-name 'Ubuntu 11'
-gsettings set org.gnome.desktop.interface document-font-name 'Sans 11'
-gsettings set org.gnome.desktop.interface monospace-font-name 'Ubuntu Mono 13'
+gsettings set org.cinnamon.desktop.interface cursor-theme 'Adwaita'
+gsettings set org.cinnamon.desktop.interface icon-theme 'Mint-Y'
+gsettings set org.cinnamon.desktop.interface font-name 'Ubuntu 11'
+gsettings set org.cinnamon.desktop.interface document-font-name 'Sans 11'
+gsettings set org.cinnamon.desktop.interface monospace-font-name 'Ubuntu Mono 13'
 
 # Configure window controls
-gsettings set org.gnome.desktop.wm.preferences button-layout 'close,minimize,maximize:'
-gsettings set org.gnome.desktop.wm.preferences resize-with-right-button true
+gsettings set org.cinnamon.desktop.wm.preferences button-layout 'menu:minimize,maximize,close'
+gsettings set org.cinnamon.desktop.wm.preferences resize-with-right-button true
 
 # Set dark theme
-gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+gsettings set org.cinnamon.desktop.interface gtk-theme-backup 'PrivaLinux-Dark'
+gsettings set org.cinnamon.theme name 'PrivaLinux-Dark'
 
-# Configure dock
-gsettings set org.gnome.shell.extensions.dash-to-dock extend-height false
-gsettings set org.gnome.shell.extensions.dash-to-dock dock-position 'BOTTOM'
-gsettings set org.gnome.shell.extensions.dash-to-dock transparency-mode 'DYNAMIC'
-gsettings set org.gnome.shell.extensions.dash-to-dock unity-backlit-items true
+# Configure panel and applets
+gsettings set org.cinnamon panels-enabled "['1:0:bottom']"
+gsettings set org.cinnamon panel-zone-icon-sizes '[{"panelId":1,"left":0,"center":0,"right":24}]'
+gsettings set org.cinnamon enabled-applets "['panel1:left:0:menu@cinnamon.org', 'panel1:left:1:show-desktop@cinnamon.org', 'panel1:left:2:grouped-window-list@cinnamon.org', 'panel1:right:0:systray@cinnamon.org', 'panel1:right:1:notifications@cinnamon.org', 'panel1:right:2:printers@cinnamon.org', 'panel1:right:3:removable-drives@cinnamon.org', 'panel1:right:4:network@cinnamon.org', 'panel1:right:5:sound@cinnamon.org', 'panel1:right:6:calendar@cinnamon.org']"
 
-# Configure overview
-gsettings set org.gnome.shell.app-switcher current-workspace-only true
-gsettings set org.gnome.mutter dynamic-workspaces true
-gsettings set org.gnome.desktop.wm.preferences num-workspaces 4
+# Configure window management
+gsettings set org.cinnamon.muffin edge-tile-threshold 150
+gsettings set org.cinnamon.muffin placement-mode 'automatic'
+gsettings set org.cinnamon.muffin unredirect-fullscreen-windows true
 
 # Enable desktop icons
 gsettings set org.gnome.desktop.background show-desktop-icons true
