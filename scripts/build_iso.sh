@@ -6,8 +6,8 @@
 set -e
 
 # Configuration
-BASE_DISTRO="ubuntu"
-BASE_VERSION="22.04"
+BASE_DISTRO="linuxmint"
+BASE_VERSION="21"
 OUTPUT_NAME="privalinux-os"
 OUTPUT_VERSION="1.0"
 WORK_DIR="./build"

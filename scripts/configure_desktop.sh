@@ -8,7 +8,7 @@ set -e
 echo "[+] Configuring desktop environment for PrivaLinux OS"
 
 # Install required packages for enhanced desktop experience
-apt-get install -y gnome-tweaks dconf-editor cinnamon-menu-editor plank ollama
+apt-get install -y gnome-tweaks dconf-editor cinnamon-menu-editor plank ollama cairo-dock cairo-dock-plug-ins gparted synaptic
 
 # Create theme directory
 mkdir -p /usr/share/themes/PrivaLinux
@@ -78,6 +78,9 @@ gsettings set org.cinnamon panel-zone-icon-sizes '[{"panelId":1,"left":0,"center
 gsettings set org.cinnamon enabled-applets "['panel1:left:0:menu@cinnamon.org', 'panel1:left:1:show-desktop@cinnamon.org', 'panel1:left:2:grouped-window-list@cinnamon.org', 'panel1:right:0:systray@cinnamon.org', 'panel1:right:1:notifications@cinnamon.org', 'panel1:right:2:printers@cinnamon.org', 'panel1:right:3:removable-drives@cinnamon.org', 'panel1:right:4:network@cinnamon.org', 'panel1:right:5:sound@cinnamon.org', 'panel1:right:6:calendar@cinnamon.org', 'panel1:right:7:weather@cinnamon.org']"
 
 # Configure Plank dock for enhanced taskbar experience
+mkdir -p /etc/skel/.config/plank/dock1/launchers
+
+# Add applications to Plank dock
 cat > /etc/skel/.config/plank/dock1/launchers/firefox.dockitem << EOF
 [PlankDockItemPreferences]
 Launcher=file:///usr/share/applications/firefox.desktop
@@ -88,12 +91,54 @@ cat > /etc/skel/.config/plank/dock1/launchers/ai-assistant.dockitem << EOF
 Launcher=file:///etc/skel/Desktop/ai-assistant.desktop
 EOF
 
+cat > /etc/skel/.config/plank/dock1/launchers/nemo.dockitem << EOF
+[PlankDockItemPreferences]
+Launcher=file:///usr/share/applications/nemo.desktop
+EOF
+
+cat > /etc/skel/.config/plank/dock1/launchers/gparted.dockitem << EOF
+[PlankDockItemPreferences]
+Launcher=file:///usr/share/applications/gparted.desktop
+EOF
+
+cat > /etc/skel/.config/plank/dock1/launchers/terminal.dockitem << EOF
+[PlankDockItemPreferences]
+Launcher=file:///usr/share/applications/gnome-terminal.desktop
+EOF
+
+cat > /etc/skel/.config/plank/dock1/launchers/synaptic.dockitem << EOF
+[PlankDockItemPreferences]
+Launcher=file:///usr/share/applications/synaptic.desktop
+EOF
+
 # Configure Plank settings
 dconf write /net/launchpad/plank/docks/dock1/theme '"Transparent"'
 dconf write /net/launchpad/plank/docks/dock1/zoom-enabled true
+dconf write /net/launchpad/plank/docks/dock1/zoom-percent 150
 dconf write /net/launchpad/plank/docks/dock1/icon-size 48
 dconf write /net/launchpad/plank/docks/dock1/position '"bottom"'
 dconf write /net/launchpad/plank/docks/dock1/alignment '"center"'
+dconf write /net/launchpad/plank/docks/dock1/unhide-delay 0
+dconf write /net/launchpad/plank/docks/dock1/hide-delay 0
+dconf write /net/launchpad/plank/docks/dock1/hide-mode '"intelligent"'
+dconf write /net/launchpad/plank/docks/dock1/lock-items true
+dconf write /net/launchpad/plank/docks/dock1/tooltips-enabled true
+dconf write /net/launchpad/plank/docks/dock1/pressure-reveal true
+
+# Ensure Plank starts on login
+mkdir -p /etc/skel/.config/autostart
+cat > /etc/skel/.config/autostart/plank.desktop << EOF
+[Desktop Entry]
+Type=Application
+Name=Plank
+Comment=Dock for PrivaLinux OS
+Exec=plank
+Icon=plank
+Terminal=false
+Categories=Utility;
+StartupNotify=true
+X-GNOME-Autostart-enabled=true
+EOF
 
 # Configure window management
 gsettings set org.cinnamon.muffin edge-tile-threshold 150
