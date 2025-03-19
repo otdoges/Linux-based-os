@@ -21,31 +21,15 @@ gsettings set org.gnome.desktop.privacy send-software-usage-stats false
 gsettings set org.gnome.system.location enabled false
 gsettings set org.gnome.desktop.search-providers disable-external true
 
-# Configure Brave as default browser
-echo "[+] Configuring Brave browser for enhanced privacy"
-xdg-settings set default-web-browser brave-browser.desktop
+# Configure Zen Browser and Brave Browser
+echo "[+] Configuring Zen Browser and Brave Browser for enhanced privacy"
 
-# Configure Brave browser privacy settings
-mkdir -p /etc/brave/policies/managed/
-cat > /etc/brave/policies/managed/privacy.json << EOF
-{
-    "DefaultSearchProviderEnabled": true,
-    "DefaultSearchProviderName": "DuckDuckGo",
-    "DefaultSearchProviderSearchURL": "https://duckduckgo.com/?q={searchTerms}",
-    "DNSOverHttpsMode": "secure",
-    "PasswordManagerEnabled": false,
-    "SafeBrowsingEnabled": true,
-    "SearchSuggestEnabled": false,
-    "SpellCheckServiceEnabled": false,
-    "SyncDisabled": true,
-    "MetricsReportingEnabled": false
-}
-EOF
+# Set Zen Browser as default browser
+xdg-settings set default-web-browser zenbrowser.desktop
 
-# Configure Zen browser as alternative
-echo "[+] Setting up Zen browser as alternative browser"
-mkdir -p /etc/skel/.mozilla/zen/privalinux.default
-cat > /etc/skel/.mozilla/zen/privalinux.default/user.js << EOF
+# Configure Zen Browser privacy settings
+mkdir -p /etc/skel/.zenbrowser/privalinux.default
+cat > /etc/skel/.zenbrowser/privalinux.default/user.js << EOF
 // Disable telemetry
 user_pref("toolkit.telemetry.enabled", false);
 user_pref("toolkit.telemetry.unified", false);
@@ -67,9 +51,11 @@ user_pref("network.dns.disablePrefetch", true);
 user_pref("network.predictor.enabled", false);
 user_pref("network.predictor.enable-prefetch", false);
 
-// Set default search engine to DuckDuckGo
-user_pref("browser.urlbar.placeholderName", "DuckDuckGo");
-user_pref("browser.urlbar.placeholderName.private", "DuckDuckGo");
+// Set default search engine to Startpage
+user_pref("browser.urlbar.placeholderName", "Startpage");
+user_pref("browser.urlbar.placeholderName.private", "Startpage");
+user_pref("browser.search.defaultenginename", "Startpage");
+user_pref("browser.search.defaultenginename.private", "Startpage");
 
 // Enable HTTPS-Only Mode
 user_pref("dom.security.https_only_mode", true);
@@ -86,9 +72,6 @@ user_pref("datareporting.healthreport.uploadEnabled", false);
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
 user_pref("datareporting.sessions.current.clean", true);
 
-// Disable Pocket
-user_pref("extensions.pocket.enabled", false);
-
 // Disable form autofill
 user_pref("browser.formfill.enable", false);
 user_pref("extensions.formautofill.addresses.enabled", false);
@@ -101,15 +84,38 @@ user_pref("app.shield.optoutstudies.enabled", false);
 user_pref("breakpad.reportURL", "");
 user_pref("browser.tabs.crashReporting.sendReport", false);
 
-// Disable recommendations
-user_pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", false);
-user_pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", false);
-
 // Enable Do Not Track
 user_pref("privacy.donottrackheader.enabled", true);
 
 // Block third-party cookies
 user_pref("network.cookie.cookieBehavior", 1);
+EOF
+
+# Configure Brave Browser privacy settings
+mkdir -p /etc/brave-browser/policies/managed
+cat > /etc/brave-browser/policies/managed/privacy_policy.json << EOF
+{
+    "DefaultSearchProviderEnabled": true,
+    "DefaultSearchProviderName": "Startpage",
+    "DefaultSearchProviderSearchURL": "https://www.startpage.com/do/search?q={searchTerms}",
+    "DNSInterceptionChecksEnabled": false,
+    "MetricsReportingEnabled": false,
+    "PasswordManagerEnabled": false,
+    "PaymentMethodQueryEnabled": false,
+    "PrivacySettingsEnabled": true,
+    "SafeBrowsingEnabled": true,
+    "SearchSuggestEnabled": false,
+    "SpellCheckServiceEnabled": false,
+    "SyncDisabled": true,
+    "UrlKeyedAnonymizedDataCollectionEnabled": false,
+    "WebRtcEventLogCollectionAllowed": false,
+    "BrowserSignin": 0,
+    "AutofillAddressEnabled": false,
+    "AutofillCreditCardEnabled": false,
+    "DefaultGeolocationSetting": 2,
+    "DefaultNotificationsSetting": 2,
+    "RestoreOnStartup": 1
+}
 EOF
 
 # Configure system-wide DNS over HTTPS
@@ -148,8 +154,7 @@ if [ "$ENABLE_APP_SANDBOXING" = "true" ]; then
 # PrivaLinux OS Firejail Configuration
 
 # Web browsers
-zen-browser
-brave-browser
+librewolf
 
 # Email clients
 thunderbird
